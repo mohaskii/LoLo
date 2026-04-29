@@ -1,0 +1,41 @@
+{
+  "tasks": {
+    "dev": "deno run -A build-config.ts"
+
+  },
+
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 80,
+    "indentWidth": 2,
+    "semiColons": false,
+    "singleQuote": true,
+    "exclude": ["metafile.json"]
+  },
+  "lock": false,
+  "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "exactOptionalPropertyTypes": false,
+    "lib": [
+      "deno.window",
+      "deno.ns",
+      "ESNext",
+      "DOM",
+      "DOM.Iterable",
+      "DOM.AsyncIterable",
+      "webworker"
+    ]
+  },
+  "imports": {
+    "@capacitor/camera": "npm:@capacitor/camera@^8.2.0",
+    "@preact/preset-vite": "npm:@preact/preset-vite@^2.10.5",
+    "@preact/signals": "npm:@preact/signals@^2.9.0",
+    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.2.4",
+    "daisyui": "npm:daisyui@^5.5.19",
+    "preact": "npm:preact@^10.29.1",
+    "tailwindcss": "npm:tailwindcss@^4.2.4",
+    "vite": "npm:vite@^8.0.10"
+  }
+}
