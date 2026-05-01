@@ -36,17 +36,42 @@ const TabItem = ({ icon: Icon, label, active = false }: {
 
 const TopBar = () => {
   return (
-    <div class='flex justify-between items-center px-4 py-3  '>
-      <div class='flex space-x-6 relative'>
-        <div class='relative'>
-          <span class='text-lg font-medium opacity-70'>Suivie</span>
+    <div>
+      <div class='flex justify-between items-center px-4 py-3  '>
+        <div class='flex space-x-6 relative'>
+          <div class='relative'>
+            <span class='text-xl font-bold opacity-70'>Suivie</span>
+          </div>
+          <div class='relative'>
+            <span class='text-xl font-bold '>Pour Toi</span>
+            <div class='absolute bottom-0 left-0 right-0 h-0.5 bg-base-content' />
+          </div>
         </div>
-        <div class='relative'>
-          <span class='text-lg font-medium '>Pour Toi</span>
-          <div class='absolute bottom-0 left-0 right-0 h-0.5 bg-base-content' />
+        <Bell strokeWidth={4} class='w-6 h-6 ' />
+      </div>
+      <div class='flex overflow-x-auto scrollbar-hide px-4 py-2 space-x-3'>
+        <div class='bg-primary text-primary-content px-4 py-1.5 card text-sm font-medium whitespace-nowrap'>
+          Tout
+        </div>
+        <div class='bg-base-300/60 backdrop-blur-xs   text-base-content px-4 py-1.5 card text-sm font-medium whitespace-nowrap'>
+          Vêtements
+        </div>
+        <div class='bg-base-300/60 backdrop-blur-xs   text-base-content px-4 py-1.5 card text-sm font-medium whitespace-nowrap'>
+          Électronique
+        </div>
+        <div class='bg-base-300/60 backdrop-blur-xs    text-base-content px-4 py-1.5 card text-sm font-medium whitespace-nowrap'>
+          Maison & Jardin
+        </div>
+        <div class='bg-base-300/60 backdrop-blur-xs   text-base-content px-4 py-1.5 card text-sm font-medium whitespace-nowrap'>
+          Véhicules
+        </div>
+        <div class='bg-base-300/60 backdrop-blur-xs   text-base-content px-4 py-1.5 card text-sm font-medium whitespace-nowrap'>
+          Livres & Médias
+        </div>
+        <div class='bg-base-300/60 backdrop-blur-xs   text-base-content px-4 py-1.5 card text-sm font-medium whitespace-nowrap'>
+          Services
         </div>
       </div>
-      <Bell strokeWidth={4} class='w-6 h-6 ' />
     </div>
   )
 }
@@ -62,39 +87,35 @@ const BotomNavBAr = () => {
   )
 }
 
-const FeedItem = ({ stream, isActive }: { stream: Livestream; isActive: boolean }) => {
+const FeedItem = (
+  { stream, isActive }: { stream: Livestream; isActive: boolean },
+) => {
   return (
     <div class='h-full w-full relative bg-black'>
       {/* Background Image / Video Mock */}
       <img
-        src={stream.thumbnail.fullSizeImage || stream.thumbnail.biggerImage  }
+        src={stream.thumbnail.fullSizeImage || stream.thumbnail.biggerImage}
         class='absolute inset-0 w-full h-full object-cover opacity-90'
         alt={stream.title}
-        
       />
 
       {/* Right Side Actions */}
       <div class='absolute right-4 bottom-10 flex flex-col items-center space-y-5'>
-        <div class='relative mb-2'>
-          <div class='w-12 h-12 rounded-full  ring-primary ring-offset-base-100   ring-5 '>
+        <div class=' '>
+          <div class='w-12 h-12 rounded-full ring-primary  ring-5 '>
             <img
               src={stream.user.profileImage.url}
               class='w-full h-full rounded-full '
             />
           </div>
-          <div class='absolute -bottom-2.5 left-1/2 -translate-x-1/2 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg'>
-            LIVE
-            
+          <div class='flex flex-col items-center'>
+            <div class=' bottom-2.5 bg-error  text-[9px] font-bold px-1.5 py-0.5 rounded '>
+              LIVE
+            </div>
+            <span class=' bottom-2.5 text-[10px]' >{stream.activeViewers}</span>
           </div>
-          
         </div>
 
-
-        <button class='flex flex-col items-center text-white'>
-          <div class='bg-black/20 backdrop-blur-md p-2.5 rounded-full border border-white/10'>
-            <Heart class='w-6 h-6 fill-transparent' />
-          </div>
-        </button>
         <button class='flex flex-col items-center text-white'>
           <div class='p-2.5 drop-shadow-lg'>
             <Share2 class='w-6 h-6' />
@@ -113,7 +134,7 @@ const FeedItem = ({ stream, isActive }: { stream: Livestream; isActive: boolean 
       </div>
 
       {/* Bottom Info */}
-      <div class='absolute left-4 bottom-28 right-20 text-white'>
+      <div class='absolute left-4 bottom-10 right-20 '>
         <div class='flex items-center space-x-2 mb-2'>
           <h2 class='font-bold text-lg drop-shadow-md'>
             {stream.user.username}
