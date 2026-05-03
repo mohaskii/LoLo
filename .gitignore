@@ -10,7 +10,7 @@ pnpm-debug.log*
 /build
 
 # Capacitor
-android/
+
 ios/
 electron/
 
