@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks'
 import CameraStream from '../plugins/camera-stream.ts'
 
 export const CameraPoCPage = () => {
-  const [isStreaming, setIsStreaming] = useState(false)
+  const [streamMode, setStreamMode] = useState<'none' | '40percent' | 'fullscreen'>('none')
   const [error, setError] = useState<string | null>(null)
   const [logs, setLogs] = useState<string[]>(['[init] PoC page loaded'])
 
@@ -11,13 +11,13 @@ export const CameraPoCPage = () => {
     setLogs((prev) => [...prev.slice(-20), `[${ts}] ${msg}`])
   }
 
-  const startStream = async () => {
+  const startStream = async (mode: '40percent' | 'fullscreen') => {
     try {
       setError(null)
-      addLog('Calling CameraStream.startCamera()...')
-      await CameraStream.startCamera()
-      setIsStreaming(true)
-      addLog('✅ Camera started successfully')
+      addLog(`Calling CameraStream.startCamera({ mode: '${mode}' })...`)
+      await CameraStream.startCamera({ mode })
+      setStreamMode(mode)
+      addLog(`✅ Camera started successfully in ${mode} mode`)
     } catch (e: any) {
       const msg = e?.message || String(e)
       console.error('Error starting camera:', e)
@@ -31,7 +31,7 @@ export const CameraPoCPage = () => {
       setError(null)
       addLog('Calling CameraStream.stopCamera()...')
       await CameraStream.stopCamera()
-      setIsStreaming(false)
+      setStreamMode('none')
       addLog('✅ Camera stopped successfully')
     } catch (e: any) {
       const msg = e?.message || String(e)
@@ -42,31 +42,49 @@ export const CameraPoCPage = () => {
   }
 
   return (
-    <div class='poc-container'>
-      {/* ── Top 40% — Camera preview zone ── */}
-      <div class={`camera-zone ${isStreaming ? 'on' : 'off'}`}>
+    <div class={`poc-container ${streamMode === 'fullscreen' ? 'fullscreen-mode' : ''}`}>
+      {/* ── Camera preview zone ── */}
+      <div class={`camera-zone ${streamMode !== 'none' ? 'on' : 'off'}`}>
         {/* Live indicator */}
-        {isStreaming && (
+        {streamMode !== 'none' && (
           <div class='live-badge'>
             <span class='live-dot' />
-            <span>Live</span>
+            <span>Live ({streamMode})</span>
           </div>
         )}
 
-        {/* Off state — show start button */}
-        {!isStreaming && (
+        {/* Off state — show start buttons */}
+        {streamMode === 'none' && (
           <>
             <div class='camera-icon-placeholder'>📷</div>
-            <p class='zone-label'>Zone caméra native (40%)</p>
-            <button class='btn btn-start' onClick={startStream}>
-              ▶ Démarrer la Caméra
-            </button>
+            <p class='zone-label'>Zone caméra native</p>
+            <div class='button-group'>
+              <button class='btn btn-start' onClick={() => startStream('40percent')}>
+                ▶ Mode 40%
+              </button>
+              <button class='btn btn-start fullscreen' onClick={() => startStream('fullscreen')}>
+                ▶ Plein Écran
+              </button>
+            </div>
           </>
         )}
 
-        {/* On state — just a subtle label */}
-        {isStreaming && (
-          <p class='active-text'>📷 Caméra active — visible ici</p>
+        {/* On state — show toggle buttons instead of simple label */}
+        {streamMode !== 'none' && (
+          <div class='flex flex-col items-center gap-4 mt-8'>
+            <p class='active-text'>📷 Caméra active — visible ici</p>
+            <div class='button-group' style={{ padding: '0 20px' }}>
+              {streamMode === 'fullscreen' ? (
+                <button class='btn btn-start' onClick={() => startStream('40percent')}>
+                  ⬇️ Réduire à 40%
+                </button>
+              ) : (
+                <button class='btn btn-start fullscreen' onClick={() => startStream('fullscreen')}>
+                  ⬆️ Plein Écran
+                </button>
+              )}
+            </div>
+          </div>
         )}
       </div>
 
@@ -79,7 +97,7 @@ export const CameraPoCPage = () => {
 
         {error && <div class='error-banner'>⚠️ {error}</div>}
 
-        {isStreaming && (
+        {streamMode !== 'none' && (
           <button class='btn btn-stop' onClick={stopStream}>
             ⏹ Arrêter la Caméra
           </button>

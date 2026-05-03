@@ -49,21 +49,26 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
             requestPermissionForAlias("camera", call, "cameraPermissionCallback");
             return;
         }
-        internalStartCamera(call);
+        String mode = call.getString("mode", "40percent");
+        internalStartCamera(call, mode);
     }
 
     @PermissionCallback
     private void cameraPermissionCallback(PluginCall call) {
+        String mode = call.getString("mode", "40percent");
         if (getPermissionState("camera") == PermissionState.GRANTED) {
-            internalStartCamera(call);
+            internalStartCamera(call, mode);
         } else {
             call.reject("Camera permission denied.");
         }
     }
 
-    private void internalStartCamera(PluginCall call) {
+    private void internalStartCamera(PluginCall call, String mode) {
         if (isCameraPreviewShowing) {
-            call.resolve();
+            getActivity().runOnUiThread(() -> {
+                updateLayoutForMode(mode);
+                call.resolve();
+            });
             return;
         }
 
@@ -76,10 +81,16 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
                     cameraTextureView = new TextureView(getContext());
                     cameraTextureView.setSurfaceTextureListener(this);
 
-                    // Calculate 40% of screen height
+                    // Calculate height based on mode
                     int screenHeight = getActivity().getResources().getDisplayMetrics().heightPixels;
                     int screenWidth = getActivity().getResources().getDisplayMetrics().widthPixels;
-                    int wrapperHeight = (int) (screenHeight * 0.40);
+                    
+                    int wrapperHeight;
+                    if ("fullscreen".equals(mode)) {
+                        wrapperHeight = screenHeight;
+                    } else {
+                        wrapperHeight = (int) (screenHeight * 0.40);
+                    }
                     
                     // We want the video itself to be strictly 9:16
                     // 16 is height, 9 is width.
@@ -158,6 +169,43 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
             getBridge().getWebView().setBackgroundColor(android.graphics.Color.WHITE);
             call.resolve();
         });
+    }
+
+    // ── Layout Update ──
+    private void updateLayoutForMode(String mode) {
+        if (cameraWrapper == null || cameraTextureView == null) return;
+
+        int screenHeight = getActivity().getResources().getDisplayMetrics().heightPixels;
+        int screenWidth = getActivity().getResources().getDisplayMetrics().widthPixels;
+        
+        int wrapperHeight;
+        if ("fullscreen".equals(mode)) {
+            wrapperHeight = screenHeight;
+        } else {
+            wrapperHeight = (int) (screenHeight * 0.40);
+        }
+        
+        // Strictly 9:16
+        int textureWidth = (int) (wrapperHeight * 9.0f / 16.0f);
+        int textureHeight = wrapperHeight;
+
+        if (textureWidth > screenWidth) {
+            textureWidth = screenWidth;
+            textureHeight = (int) (screenWidth * 16.0f / 9.0f);
+        }
+
+        ViewGroup.LayoutParams wrapperParams = cameraWrapper.getLayoutParams();
+        if (wrapperParams != null) {
+            wrapperParams.height = wrapperHeight;
+            cameraWrapper.setLayoutParams(wrapperParams);
+        }
+
+        FrameLayout.LayoutParams textureParams = (FrameLayout.LayoutParams) cameraTextureView.getLayoutParams();
+        if (textureParams != null) {
+            textureParams.width = textureWidth;
+            textureParams.height = textureHeight;
+            cameraTextureView.setLayoutParams(textureParams);
+        }
     }
 
     // ── Camera Quality & Focus Configuration ──
