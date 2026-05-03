@@ -1,137 +1,202 @@
-@import "tailwindcss";
-@plugin "daisyui";
+/* ── CameraStream PoC — Minimal CSS ──
+   Every layer MUST be transparent so the native SurfaceView
+   behind the WebView can show through the top 40%.
+*/
 
-html {
-    background-color:var(--color-base-100);
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* CRITICAL: html + body + #app all transparent */
+html, body {
+    background-color: transparent !important;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #fff;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #app {
-    background-color: var(--color-base-200);
-    position: absolute;
+    background-color: transparent !important;
     width: 100%;
-    height: calc(100vh - var(--safe-area-inset-top) - var(--safe-area-inset-bottom));
-    top: var(--safe-area-inset-top);
+    height: 100%;
+    position: relative;
 }
 
-@plugin "daisyui/theme" {
-    name: "light";
-    default: false;
-    prefersdark: false;
-    color-scheme: "light";
-    --color-base-100: #fefdf8;
-    --color-base-200: #faf8ed;
-    --color-base-300: #f5f2e3;
-    --color-base-content: #2d2d1f;
-    --color-primary: #F2E124;
-    --color-primary-content: #2d2d1f;
-    --color-secondary: #a17c4f;
-    --color-secondary-content: #ffffff;
-    --color-accent: #28d752;
-    --color-accent-content: #ffffff;
-    --color-neutral: #6b6b4f;
-    --color-neutral-content: #ffffff;
-    --color-info: #F2E124;
-    --color-info-content: #2d2d1f;
-    --color-success: #28d752;
-    --color-success-content: #ffffff;
-    --color-warning: #f4b22d;
-    --color-warning-content: #2d2d1f;
-    --color-error: #dc2626;
-    --color-error-content: #ffffff;
-    --radius-selector: 0.5rem;
-    --radius-field: 1rem;
-    --radius-box: 1rem;
-    --size-selector: 0.25rem;
-    --size-field: 0.25rem;
-    --border: 0;
-    --depth: 0;
-    --noise: 0;
-}
-@plugin "daisyui/theme" {
-    name: "dark";
-    default: false;
-    prefersdark: false;
-    color-scheme: "dark";
-    --color-base-100: #1a1e14;
-    --color-base-200: #232820;
-    --color-base-300: #2d332a;
-    --color-base-content: #f5f5e8;
-    --color-primary: #F2E124;
-    --color-primary-content: #1a1e14;
-    --color-secondary: #a17c4f;
-    --color-secondary-content: #ffffff;
-    --color-accent: #28d752;
-    --color-accent-content: #1a1e14;
-    --color-neutral: #4a4f42;
-    --color-neutral-content: #f5f5e8;
-    --color-info: #F2E124;
-    --color-info-content: #1a1e14;
-    --color-success: #28d752;
-    --color-success-content: #1a1e14;
-    --color-warning: #f4b22d;
-    --color-warning-content: #1a1e14;
-    --color-error: #ef4444;
-    --color-error-content: #ffffff;
-    --radius-selector: 0.5rem;
-    --radius-field: 1rem;
-    --radius-box: 1rem;
-    --size-selector: 0.25rem;
-    --size-field: 0.25rem;
-    --border: 0;
-    --depth: 0;
-    --noise: 0;
+/* ── Layout ── */
+
+.poc-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
 }
 
-@theme {
-    /* Starfruit color scale - Primary */
-    --color-orchid-50: #fafaf2;
-    --color-orchid-100: #f5f4e1;
-    --color-orchid-200: #ebe9c4;
-    --color-orchid-300: #ddd89d;
-    --color-orchid-400: #c8c573; /* Starfruit */
-    --color-orchid-500: #b3af5a;
-    --color-orchid-600: #9a964b;
-    --color-orchid-700: #7d7a3f;
-    --color-orchid-800: #696637;
-    --color-orchid-900: #5a5630;
-    --color-orchid-950: #333018;
+/* Top 40% — transparent to let native camera through */
+.camera-zone {
+    height: 40vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
 
-    /* Malachite color scale - Accent/Success */
-    --color-green-50: #f0fef3;
-    --color-green-100: #dcfce4;
-    --color-green-200: #bbf7c9;
-    --color-green-300: #86ee9f;
-    --color-green-400: #4ade6d;
-    --color-green-500: #28d752; /* Malachite */
-    --color-green-600: #16a639;
-    --color-green-700: #158230;
-    --color-green-800: #166729;
-    --color-green-900: #145524;
-    --color-green-950: #052e11;
+.camera-zone.off {
+    background-color: rgba(0, 0, 0, 0.9);
+}
 
-    /* Paradise Gold color scale - Secondary/Warning */
-    --color-gold-50: #fffaeb;
-    --color-gold-100: #fef0c7;
-    --color-gold-200: #fddf8a;
-    --color-gold-300: #fcc84d;
-    --color-gold-400: #fbb320;
-    --color-gold-500: #f4b22d; /* Paradise Gold */
-    --color-gold-600: #d9870b;
-    --color-gold-700: #b45f0c;
-    --color-gold-800: #924a11;
-    --color-gold-900: #783e12;
-    --color-gold-950: #451f06;
+.camera-zone.on {
+    background-color: transparent;
+}
 
-    /* Crispy Yellow Green - kept for flexibility */
-    --color-lime-50: #fcfde7;
-    --color-lime-100: #f9fbc4;
-    --color-lime-200: #f6f88d;
-    --color-lime-300: #f3f54c;
-    --color-lime-400: #e9e629; /* Crispy Yellow Green */
-    --color-lime-500: #d4cf0d;
-    --color-lime-600: #aba508;
-    --color-lime-700: #827d0a;
-    --color-lime-800: #69620f;
-    --color-lime-900: #585212;
-    --color-lime-950: #312e05;
+/* Bottom 60% — opaque controls */
+.controls-zone {
+    height: 60vh;
+    background-color: #111;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* ── Buttons ── */
+
+.btn {
+    border: none;
+    border-radius: 12px;
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.1s ease, opacity 0.2s ease;
+    width: 100%;
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+
+.btn-start {
+    background-color: #22c55e;
+    color: #000;
+}
+
+.btn-stop {
+    background-color: #ef4444;
+    color: #fff;
+}
+
+/* ── Status indicators ── */
+
+.live-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #ef4444;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.camera-icon-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin-bottom: 16px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.zone-label {
+    font-size: 14px;
+    opacity: 0.7;
+    margin-bottom: 20px;
+}
+
+.active-text {
+    font-size: 16px;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Controls zone content ── */
+
+.controls-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.controls-header h1 {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.controls-header p {
+    font-size: 12px;
+    opacity: 0.5;
+    margin-top: 4px;
+}
+
+.error-banner {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.status-log {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 16px;
+    font-size: 12px;
+    font-family: monospace;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.status-log p {
+    margin-bottom: 4px;
+    opacity: 0.7;
+}
+
+.status-log p:last-child {
+    opacity: 1;
+    color: #22c55e;
 }
