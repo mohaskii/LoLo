@@ -1,10 +1,10 @@
 package com.Lolo.app.plugins;
 
 import android.Manifest;
+import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.TextureView;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
@@ -27,25 +27,20 @@ import java.io.IOException;
     }
 )
 @SuppressWarnings("deprecation") // Using deprecated Camera API intentionally for PoC
-public class CameraStreamPlugin extends Plugin implements SurfaceHolder.Callback {
+public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTextureListener {
 
     private static final String TAG = "CameraStreamPlugin";
 
     private Camera camera;
-    private SurfaceView cameraSurfaceView;
-    private SurfaceHolder surfaceHolder;
+    private TextureView cameraTextureView;
+    private FrameLayout cameraWrapper;
     private boolean isCameraPreviewShowing = false;
-    private FrameLayout mainFrameLayout;
+    private ViewGroup parentView;
 
     @Override
     public void load() {
         super.load();
-        // Grab the FrameLayout root from our custom activity_main.xml
-        mainFrameLayout = getActivity().findViewById(
-            getActivity().getResources().getIdentifier(
-                "main_frame_layout", "id", getActivity().getPackageName()
-            )
-        );
+        parentView = (ViewGroup) getBridge().getWebView().getParent();
     }
 
     @PluginMethod
@@ -74,23 +69,45 @@ public class CameraStreamPlugin extends Plugin implements SurfaceHolder.Callback
 
         getActivity().runOnUiThread(() -> {
             try {
-                // Create the SurfaceView if it doesn't exist yet
-                if (cameraSurfaceView == null && mainFrameLayout != null) {
-                    cameraSurfaceView = new SurfaceView(getContext());
-                    surfaceHolder = cameraSurfaceView.getHolder();
-                    surfaceHolder.addCallback(this);
+                // Create the wrapper and TextureView if they don't exist yet
+                if (cameraWrapper == null && parentView != null) {
+                    cameraWrapper = new FrameLayout(getContext());
+                    
+                    cameraTextureView = new TextureView(getContext());
+                    cameraTextureView.setSurfaceTextureListener(this);
 
-                    // Calculate 40% of screen height for the camera preview
+                    // Calculate 40% of screen height
                     int screenHeight = getActivity().getResources().getDisplayMetrics().heightPixels;
-                    int previewHeight = (int) (screenHeight * 0.40);
+                    int screenWidth = getActivity().getResources().getDisplayMetrics().widthPixels;
+                    int wrapperHeight = (int) (screenHeight * 0.40);
+                    
+                    // We want the video itself to be strictly 9:16
+                    // 16 is height, 9 is width.
+                    int textureWidth = (int) (wrapperHeight * 9.0f / 16.0f);
+                    int textureHeight = wrapperHeight;
 
-                    FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
+                    // If for some reason the width exceeds the screen width, constrain it
+                    if (textureWidth > screenWidth) {
+                        textureWidth = screenWidth;
+                        textureHeight = (int) (screenWidth * 16.0f / 9.0f);
+                    }
+
+                    // The wrapper fills the 40% height and full width (so it can center the video)
+                    ViewGroup.LayoutParams wrapperParams = new ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
-                        previewHeight
+                        wrapperHeight
                     );
 
+                    // The TextureView is exactly 9:16 and centered in the wrapper
+                    FrameLayout.LayoutParams textureParams = new FrameLayout.LayoutParams(
+                        textureWidth,
+                        textureHeight
+                    );
+                    textureParams.gravity = android.view.Gravity.CENTER;
+
+                    cameraWrapper.addView(cameraTextureView, textureParams);
                     // Insert at index 0 — behind the WebView
-                    mainFrameLayout.addView(cameraSurfaceView, 0, layoutParams);
+                    parentView.addView(cameraWrapper, 0, wrapperParams);
 
                     // Make the WebView transparent so the camera shows through
                     getBridge().getWebView().setBackgroundColor(android.graphics.Color.TRANSPARENT);
@@ -100,10 +117,16 @@ public class CameraStreamPlugin extends Plugin implements SurfaceHolder.Callback
                 if (camera == null) {
                     camera = Camera.open();
                     camera.setDisplayOrientation(90); // Portrait mode
+                    setOptimalCameraParameters(camera);
                 }
 
-                camera.setPreviewDisplay(surfaceHolder);
-                camera.startPreview();
+                // If surface is already valid, we can start immediately
+                if (cameraTextureView != null && cameraTextureView.getSurfaceTexture() != null) {
+                    camera.setPreviewTexture(cameraTextureView.getSurfaceTexture());
+                    camera.startPreview();
+                }
+                // Otherwise, onSurfaceTextureAvailable() will handle starting the preview when ready.
+
                 isCameraPreviewShowing = true;
                 call.resolve();
             } catch (IOException e) {
@@ -124,10 +147,10 @@ public class CameraStreamPlugin extends Plugin implements SurfaceHolder.Callback
                 camera.release();
                 camera = null;
             }
-            if (cameraSurfaceView != null && mainFrameLayout != null) {
-                mainFrameLayout.removeView(cameraSurfaceView);
-                cameraSurfaceView = null;
-                surfaceHolder = null;
+            if (cameraWrapper != null && parentView != null) {
+                parentView.removeView(cameraWrapper);
+                cameraWrapper = null;
+                cameraTextureView = null;
             }
             isCameraPreviewShowing = false;
 
@@ -137,25 +160,112 @@ public class CameraStreamPlugin extends Plugin implements SurfaceHolder.Callback
         });
     }
 
-    // ── SurfaceHolder.Callback ──
+    // ── Camera Quality & Focus Configuration ──
+    private void setOptimalCameraParameters(Camera camera) {
+        if (camera == null) return;
+        try {
+            Camera.Parameters parameters = camera.getParameters();
+            java.util.List<Camera.Size> sizes = parameters.getSupportedPreviewSizes();
+            if (sizes != null) {
+                Camera.Size optimalSize = null;
+                long maxResolution = 0;
+                long targetResolution = 1920 * 1080; // Target ~1080p max for fluid preview
+
+                for (Camera.Size size : sizes) {
+                    long resolution = (long) size.width * size.height;
+                    // Find the highest resolution that isn't excessively huge
+                    if (resolution > maxResolution && resolution <= targetResolution * 1.5) {
+                        maxResolution = resolution;
+                        optimalSize = size;
+                    }
+                }
+
+                if (optimalSize == null && !sizes.isEmpty()) {
+                    optimalSize = sizes.get(0);
+                }
+
+                if (optimalSize != null) {
+                    Log.i(TAG, "Selected Camera Preview Size: " + optimalSize.width + "x" + optimalSize.height);
+                    parameters.setPreviewSize(optimalSize.width, optimalSize.height);
+                }
+            }
+
+            // Enable continuous autofocus if supported
+            java.util.List<String> focusModes = parameters.getSupportedFocusModes();
+            if (focusModes != null && focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+                Log.i(TAG, "Continuous video autofocus enabled");
+            }
+
+            camera.setParameters(parameters);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to set optimal camera parameters", e);
+        }
+    }
+
+    // ── Aspect Ratio / Center Crop ──
+    private void adjustAspectRatio(int viewWidth, int viewHeight) {
+        if (camera == null || cameraTextureView == null) return;
+
+        try {
+            Camera.Size previewSize = camera.getParameters().getPreviewSize();
+            if (previewSize == null) return;
+            
+            // Because camera is rotated 90 degrees (Portrait), visually swap width and height
+            float videoWidth = previewSize.height;
+            float videoHeight = previewSize.width;
+
+            float viewRatio = (float) viewWidth / (float) viewHeight;
+            float videoRatio = videoWidth / videoHeight;
+
+            android.graphics.Matrix matrix = new android.graphics.Matrix();
+
+            if (viewRatio > videoRatio) {
+                // View is wider than video. Scale height to CenterCrop.
+                float scaleY = (viewWidth / videoRatio) / viewHeight;
+                matrix.setScale(1f, scaleY, viewWidth / 2f, viewHeight / 2f);
+            } else {
+                // View is taller than video. Scale width to CenterCrop.
+                float scaleX = (viewHeight * videoRatio) / viewWidth;
+                matrix.setScale(scaleX, 1f, viewWidth / 2f, viewHeight / 2f);
+            }
+
+            // Must run on UI thread, but SurfaceTexture callbacks are already on UI thread
+            cameraTextureView.setTransform(matrix);
+        } catch (Exception e) {
+            Log.e(TAG, "Error adjusting aspect ratio", e);
+        }
+    }
+
+    // ── TextureView.SurfaceTextureListener ──
 
     @Override
-    public void surfaceCreated(@NonNull SurfaceHolder holder) {
+    public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
+        Log.i(TAG, "onSurfaceTextureAvailable: surface is ready");
         if (camera != null) {
             try {
-                camera.setPreviewDisplay(holder);
+                camera.setPreviewTexture(surface);
+                camera.startPreview();
+                adjustAspectRatio(width, height);
+                Log.i(TAG, "onSurfaceTextureAvailable: camera preview started");
             } catch (IOException e) {
                 Log.e(TAG, "Error setting camera preview display", e);
+            } catch (RuntimeException e) {
+                Log.e(TAG, "Error starting camera preview", e);
             }
         }
     }
 
     @Override
-    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
+    public void onSurfaceTextureSizeChanged(@NonNull SurfaceTexture surface, int width, int height) {
+        Log.i(TAG, "onSurfaceTextureSizeChanged: width=" + width + " height=" + height);
         if (camera != null) {
             try {
                 camera.stopPreview();
+                camera.setPreviewTexture(surface);
                 camera.startPreview();
+                adjustAspectRatio(width, height);
+                Log.i(TAG, "onSurfaceTextureSizeChanged: camera preview restarted");
             } catch (Exception e) {
                 Log.e(TAG, "Error restarting camera preview", e);
             }
@@ -163,13 +273,19 @@ public class CameraStreamPlugin extends Plugin implements SurfaceHolder.Callback
     }
 
     @Override
-    public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
+    public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surface) {
         if (camera != null) {
             camera.stopPreview();
             camera.release();
             camera = null;
             isCameraPreviewShowing = false;
         }
+        return true;
+    }
+
+    @Override
+    public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
+        // Invoked every time there's a new camera frame
     }
 
     @Override
