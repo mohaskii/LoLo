@@ -1,7 +1,7 @@
 import { registerPlugin } from '@capacitor/core'
 
 export interface CameraStreamPlugin {
-  startCamera(): Promise<void>
+  startCamera(options?: { mode?: 'fullscreen' | '40percent' }): Promise<void>
   stopCamera(): Promise<void>
 }
 
