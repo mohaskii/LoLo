@@ -3,13 +3,11 @@ import { Feed } from './components/Feed.tsx'
 import { TopBar } from './components/TopBar.tsx'
 import { BottomNavBar } from './components/BottomNavBar.tsx'
 import { LiveScreen } from './screens/LiveScreen.tsx'
-import { CameraPoC } from './screens/CameraPoC.tsx'
 import { useState } from 'preact/hooks'
 import { Livestream } from './data.ts'
 
 export const App = () => {
   const [activeStream, setActiveStream] = useState<Livestream | null>(null)
-  const [showCameraPoC, setShowCameraPoC] = useState(false)
 
   SystemBars.setStyle({
     style: SystemBarsStyle.Dark, // Dark icons for light backgrounds
@@ -18,10 +16,10 @@ export const App = () => {
   return (
     <div class='h-full w-full flex flex-col'>
       {activeStream && (
-        <LiveScreen stream={activeStream} onClose={() => setActiveStream(null)} />
-      )}
-      {showCameraPoC && (
-        <CameraPoC onClose={() => setShowCameraPoC(false)} />
+        <LiveScreen
+          stream={activeStream}
+          onClose={() => setActiveStream(null)}
+        />
       )}
       <div class='flex-1 relative'>
         <Feed onStreamClick={setActiveStream} />
@@ -29,7 +27,7 @@ export const App = () => {
           <TopBar />
         </div>
       </div>
-      <BottomNavBar onSellClick={() => setShowCameraPoC(true)} />
+      <BottomNavBar />
     </div>
   )
 }

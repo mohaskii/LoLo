@@ -26,12 +26,12 @@ const TabItem = ({ icon: Icon, label, active = false, onClick }: {
   )
 }
 
-export const BottomNavBar = ({ onSellClick }: { onSellClick?: () => void }) => {
+export const BottomNavBar = () => {
   return (
     <div class='flex justify-around items-center bg-base-100 py-2 '>
       <TabItem icon={Home} active label='Accueil' />
       <TabItem icon={Search} label='Rechercher' />
-      <TabItem icon={Plus} label='Vendre' onClick={onSellClick} />
+      <TabItem icon={Plus} label='Vendre' />
       <TabItem icon={MessageSquare} label='Messages' />
       <TabItem icon={User} label='Profil' />
     </div>
