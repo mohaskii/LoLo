@@ -10,7 +10,7 @@ export const App = () => {
   const [activeStream, setActiveStream] = useState<Livestream | null>(null)
   const [showCameraPoC, setShowCameraPoC] = useState(false)
 
-  SystemBars.setStyle({
+  SystemBars.setStyle({ 
     style: SystemBarsStyle.Dark, // Dark icons for light backgrounds
   })
 

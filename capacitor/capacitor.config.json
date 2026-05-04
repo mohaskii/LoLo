@@ -1,9 +1,9 @@
 {
   "appId": "com.Lolo.app",
   "appName": "LoLo",
-  "webDir": "app/dist",
+  "webDir": "dist",
   "server": {
-    "url": "http://192.168.1.137:5173",
+    "url": "http://11.11.90.15:5173",
     "cleartext": true
   }
 }
