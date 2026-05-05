@@ -1,32 +1,53 @@
-import { SystemBars, SystemBarsStyle } from '@capacitor/core'
-import { Feed } from './components/Feed.tsx'
-import { TopBar } from './components/TopBar.tsx'
-import { BottomNavBar } from './components/BottomNavBar.tsx'
-import { LiveScreen } from './screens/LiveScreen.tsx'
 import { useState } from 'preact/hooks'
-import { Livestream } from './data.ts'
+import { SellerLiveScreen } from './screens/SellerLiveScreen.tsx'
+import { BuyerLiveScreen } from './screens/BuyerLiveScreen.tsx'
+import { CameraPoCPage } from './screens/CameraPoC.tsx'
 
 export const App = () => {
-  const [activeStream, setActiveStream] = useState<Livestream | null>(null)
-  const [showCameraPoC, setShowCameraPoC] = useState(false)
-
-  SystemBars.setStyle({ 
-    style: SystemBarsStyle.Dark, // Dark icons for light backgrounds
-  })
+  const [view, setView] = useState<'poc' | 'seller' | 'buyer'>('poc')
 
   return (
-    <div class='h-full w-full flex flex-col'>
-      {activeStream && (
-        <LiveScreen stream={activeStream} onClose={() => setActiveStream(null)} />
-      )}
+    <div id='main-app' class='h-full w-full'>
+      <nav
+        style={{
+          position: 'absolute',
+          top: 100,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '10px',
+          padding: '10px',
+        }}
+      >
+        <button
+          type='button'
+          onClick={() => setView('poc')}
+          style={{ color: view === 'poc' ? '#a855f7' : '#fff' }}
+        >
+          PoC
+        </button>
+        <button
+          type='button'
+          onClick={() => setView('seller')}
+          style={{ color: view === 'seller' ? '#a855f7' : '#fff' }}
+        >
+          Vendeur
+        </button>
+        <button
+          type='button'
+          onClick={() => setView('buyer')}
+          style={{ color: view === 'buyer' ? '#a855f7' : '#fff' }}
+        >
+          Acheteur
+        </button>
+      </nav>
 
-      <div class='flex-1 relative'>
-        <Feed onStreamClick={setActiveStream} />
-        <div class='absolute top-0 left-0 right-0 z-10'>
-          <TopBar />
-        </div>
-      </div>
-      <BottomNavBar onSellClick={() => setShowCameraPoC(true)} />
+      {view === 'poc' && <CameraPoCPage />}
+      {view === 'seller' && <SellerLiveScreen />}
+      {view === 'buyer' && <BuyerLiveScreen />}
     </div>
   )
 }

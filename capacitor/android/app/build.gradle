@@ -47,6 +47,9 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+    implementation 'com.github.pedroSG94.RootEncoder:library:2.4.9'
+    implementation 'com.github.pedroSG94.RootEncoder:rtmp:2.4.9'
+    implementation 'com.github.pedroSG94.RootEncoder:encoder:2.4.9'
 }
 
 apply from: 'capacitor.build.gradle'

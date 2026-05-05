@@ -19,6 +19,8 @@ import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 
 import java.io.IOException;
+import com.pedro.common.ConnectChecker;
+import com.pedro.library.rtmp.RtmpCamera1;
 
 @CapacitorPlugin(
     name = "CameraStream",
@@ -27,7 +29,7 @@ import java.io.IOException;
     }
 )
 @SuppressWarnings("deprecation") // Using deprecated Camera API intentionally for PoC
-public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTextureListener {
+public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTextureListener, ConnectChecker {
 
     private static final String TAG = "CameraStreamPlugin";
 
@@ -36,6 +38,10 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
     private FrameLayout cameraWrapper;
     private boolean isCameraPreviewShowing = false;
     private ViewGroup parentView;
+    
+    // RTMP Streaming
+    private RtmpCamera1 rtmpCamera1;
+    private String streamUrl;
 
     @Override
     public void load() {
@@ -169,6 +175,86 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
             getBridge().getWebView().setBackgroundColor(android.graphics.Color.WHITE);
             call.resolve();
         });
+    }
+
+    @PluginMethod
+    public void startStream(PluginCall call) {
+        String url = call.getString("url");
+        String key = call.getString("key");
+        if (url == null || key == null) {
+            call.reject("URL and Key are required");
+            return;
+        }
+        this.streamUrl = url + "/" + key;
+
+        getActivity().runOnUiThread(() -> {
+            if (rtmpCamera1 == null) {
+                rtmpCamera1 = new RtmpCamera1(cameraTextureView, this);
+            }
+
+            if (!rtmpCamera1.isStreaming()) {
+                if (rtmpCamera1.prepareVideo(1280, 720, 30, 3000 * 1024, 0, 90) && rtmpCamera1.prepareAudio()) {
+                    rtmpCamera1.startStream(streamUrl);
+                    call.resolve();
+                } else {
+                    call.reject("Error preparing stream, check permissions or parameters");
+                }
+            } else {
+                call.resolve();
+            }
+        });
+    }
+
+    @PluginMethod
+    public void stopStream(PluginCall call) {
+        getActivity().runOnUiThread(() -> {
+            if (rtmpCamera1 != null && rtmpCamera1.isStreaming()) {
+                rtmpCamera1.stopStream();
+            }
+            call.resolve();
+        });
+    }
+
+    // ── ConnectChecker Implementation ──
+
+    @Override
+    public void onConnectionStarted(@NonNull String url) {
+        Log.i(TAG, "RTMP Connection Started: " + url);
+    }
+
+    @Override
+    public void onConnectionSuccess() {
+        Log.i(TAG, "RTMP Connection Success");
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull String reason) {
+        Log.e(TAG, "RTMP Connection Failed: " + reason);
+        getActivity().runOnUiThread(() -> {
+            if (rtmpCamera1 != null && rtmpCamera1.isStreaming()) {
+                rtmpCamera1.stopStream();
+            }
+        });
+    }
+
+    @Override
+    public void onNewBitrate(long bitrate) {
+        Log.i(TAG, "RTMP New Bitrate: " + bitrate);
+    }
+
+    @Override
+    public void onDisconnect() {
+        Log.i(TAG, "RTMP Disconnected");
+    }
+
+    @Override
+    public void onAuthError() {
+        Log.e(TAG, "RTMP Auth Error");
+    }
+
+    @Override
+    public void onAuthSuccess() {
+        Log.i(TAG, "RTMP Auth Success");
     }
 
     // ── Layout Update ──

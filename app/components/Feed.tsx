@@ -1,7 +1,7 @@
 import { useSignal } from '@preact/signals'
 import { useEffect, useRef } from 'preact/hooks'
 import gsap from 'gsap'
-import { mockLivestreams, Livestream } from '../data.ts'
+import { Livestream, mockLivestreams } from '../data.ts'
 import { FeedItem } from './FeedItem.tsx'
 
 const DISTANCE_THRESHOLD_RATIO = 0.4 // 25% of viewport height
@@ -10,7 +10,9 @@ const DEAD_ZONE = 5 // px — ignore micro-movements
 const EDGE_RESISTANCE = 0.3 // elastic pull at boundaries
 const VELOCITY_SMOOTHING = 0.2 // lerp factor for velocity
 
-export const Feed = ({ onStreamClick }: { onStreamClick: (stream: Livestream) => void }) => {
+export const Feed = (
+  { onStreamClick }: { onStreamClick: (stream: Livestream) => void },
+) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const currentIndex = useSignal(0)

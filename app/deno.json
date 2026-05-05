@@ -1,7 +1,6 @@
 {
   "tasks": {
     "dev": "deno run -A build-config.ts"
-
   },
 
   "fmt": {
@@ -18,15 +17,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "exactOptionalPropertyTypes": false,
-    "lib": [
-      "deno.window",
-      "deno.ns",
-      "ESNext",
-      "DOM",
-      "DOM.Iterable",
-      "DOM.AsyncIterable",
-      "webworker"
-    ]
+    "skipLibCheck": true
   },
   "imports": {
     "@capacitor/camera": "npm:@capacitor/camera@^8.2.0",
@@ -38,6 +29,7 @@
     "capacitor": "npm:capacitor@^0.5.6",
     "daisyui": "npm:daisyui@^5.5.19",
     "gsap": "npm:gsap@^3.15.0",
+    "hls.js": "npm:hls.js@^1.5.20",
     "lucide-preact": "npm:lucide-preact@^1.14.0",
     "preact": "npm:preact@^10.29.1",
     "tailwindcss": "npm:tailwindcss@^4.2.4",

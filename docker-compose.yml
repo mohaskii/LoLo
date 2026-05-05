@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  srs:
+    image: ossrs/srs:5
+    container_name: lolo-srs
+    ports:
+      - "1935:1935" # RTMP
+      - "8080:8080" # HTTP API / HLS
+      - "1985:1985" # HTTP API
+    volumes:
+      - ./srs.conf:/usr/local/srs/conf/srs.conf
+    restart: always
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lolo-backend
+    ports:
+      - "8081:8080"
+    environment:
+      - PORT=8080
+    depends_on:
+      - srs

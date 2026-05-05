@@ -1,8 +1,8 @@
 import { Heart, MoreVertical, Share2, VolumeX } from 'lucide-preact'
-import { Livestream } from '../data.ts'
+import { Livestream, LivestreamCategory } from '../data.ts'
 
 export const FeedItem = (
-  { stream, isActive }: { stream: Livestream; isActive: boolean },
+  { stream, _isActive }: { stream: Livestream; _isActive: boolean },
 ) => {
   return (
     <div class='h-full w-full relative bg-black'>
@@ -30,17 +30,17 @@ export const FeedItem = (
           </div>
         </div>
 
-        <button class='flex flex-col items-center text-white'>
+        <button type='button' class='flex flex-col items-center text-white'>
           <div class='p-2.5 drop-shadow-lg'>
             <Share2 class='w-6 h-6' />
           </div>
         </button>
-        <button class='flex flex-col items-center text-white'>
+        <button type='button' class='flex flex-col items-center text-white'>
           <div class='p-2.5 drop-shadow-lg'>
             <VolumeX class='w-6 h-6' />
           </div>
         </button>
-        <button class='flex flex-col items-center text-white'>
+        <button type='button' class='flex flex-col items-center text-white'>
           <div class='p-2.5 drop-shadow-lg'>
             <MoreVertical class='w-6 h-6' />
           </div>
@@ -53,7 +53,10 @@ export const FeedItem = (
           <h2 class='font-bold text-lg drop-shadow-md'>
             {stream.user.username}
           </h2>
-          <button class='bg-base-100/40 backdrop-blur-md px-3 py-1 card flex-row text-xs font-bold  items-center '>
+          <button
+            type='button'
+            class='bg-base-100/40 backdrop-blur-md px-3 py-1 card flex-row text-xs font-bold  items-center '
+          >
             <Heart class='w-3 h-3 mr-1' /> Follow
           </button>
         </div>
@@ -61,7 +64,7 @@ export const FeedItem = (
           {stream.title}
         </p>
         <div class='flex flex-wrap gap-2'>
-          {stream.livestreamCategories.map((cat: any) => (
+          {stream.livestreamCategories.map((cat: LivestreamCategory) => (
             <span
               key={cat.id}
               class='bg-base-100/40 backdrop-blur-md text-xs px-2 py-1 card font-medium'
