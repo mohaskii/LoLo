@@ -25,7 +25,8 @@ import com.pedro.library.rtmp.RtmpCamera1;
 @CapacitorPlugin(
     name = "CameraStream",
     permissions = {
-        @Permission(strings = { Manifest.permission.CAMERA }, alias = "camera")
+        @Permission(strings = { Manifest.permission.CAMERA }, alias = "camera"),
+        @Permission(strings = { Manifest.permission.RECORD_AUDIO }, alias = "microphone")
     }
 )
 @SuppressWarnings("deprecation") // Using deprecated Camera API intentionally for PoC
@@ -51,8 +52,9 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
 
     @PluginMethod
     public void startCamera(PluginCall call) {
-        if (getPermissionState("camera") != PermissionState.GRANTED) {
-            requestPermissionForAlias("camera", call, "cameraPermissionCallback");
+        if (getPermissionState("camera") != PermissionState.GRANTED || getPermissionState("microphone") != PermissionState.GRANTED) {
+            requestPermissionForAlias("camera", call, "permissionCallback");
+            requestPermissionForAlias("microphone", call, "permissionCallback");
             return;
         }
         String mode = call.getString("mode", "40percent");
@@ -60,12 +62,12 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
     }
 
     @PermissionCallback
-    private void cameraPermissionCallback(PluginCall call) {
-        String mode = call.getString("mode", "40percent");
-        if (getPermissionState("camera") == PermissionState.GRANTED) {
+    private void permissionCallback(PluginCall call) {
+        if (getPermissionState("camera") == PermissionState.GRANTED && getPermissionState("microphone") == PermissionState.GRANTED) {
+            String mode = call.getString("mode", "40percent");
             internalStartCamera(call, mode);
         } else {
-            call.reject("Camera permission denied.");
+            call.reject("Camera and Microphone permissions are required.");
         }
     }
 

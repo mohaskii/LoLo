@@ -2,7 +2,7 @@ import { HlsPlayer } from '../components/buyer/HlsPlayer.tsx'
 
 export const BuyerLiveScreen = () => {
   // En production, cette URL viendra du backend
-  const streamUrl = 'http://localhost:8080/live/mystream.m3u8'
+  const streamUrl = 'http://192.168.1.137:8080/live/mystream.m3u8'
 
   return (
     <div class='buyer-screen'>

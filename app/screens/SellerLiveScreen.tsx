@@ -10,14 +10,14 @@ export const SellerLiveScreen = () => {
       setIsStreaming(false)
     } else {
       // En production, l'URL et la clé viendraient du backend
-      const _rtmpUrl = 'rtmp://localhost:1935/live'
+      const _rtmpUrl = 'rtmp://192.168.1.137:1935/live'
       const _streamKey = 'mystream'
 
       // On commence par afficher la caméra en 40% (mode prévisualisation)
       await CameraStream.startCamera({ mode: '40percent' })
 
       // TODO: Appeler l'encodage RTMP natif via le plugin
-      // await CameraStream.startStream({ url: rtmpUrl, key: streamKey })
+      await CameraStream.startStream({ url: _rtmpUrl, key: _streamKey })
 
       setIsStreaming(true)
     }
