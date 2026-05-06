@@ -1,12 +1,12 @@
-import { HlsPlayer } from '../components/buyer/HlsPlayer.tsx'
+import { FlvPlayer } from '../components/buyer/FlvPlayer.tsx'
 
 export const BuyerLiveScreen = () => {
-  // En production, cette URL viendra du backend
-  const streamUrl = 'http://192.168.1.137:8080/live/mystream.m3u8'
+  // HTTP-FLV pour une latence minimale (~1s vs ~10s avec HLS)
+  const streamUrl = 'http://192.168.1.137:8080/live/mystream.flv'
 
   return (
     <div class='buyer-screen'>
-      <HlsPlayer url={streamUrl} class='main-video' />
+      <FlvPlayer url={streamUrl} class='main-video' />
 
       {/* Overlay UI (Chat, Enchères) */}
       <div class='buyer-overlay'>
@@ -24,9 +24,7 @@ export const BuyerLiveScreen = () => {
           </p>
         </div>
 
-        <div class='action-buttons'>
-          <button type='button' class='btn-bid'>Enchérir - 50€</button>
-        </div>
+
       </div>
     </div>
   )

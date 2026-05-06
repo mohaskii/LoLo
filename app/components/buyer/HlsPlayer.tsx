@@ -17,6 +17,10 @@ export const HlsPlayer = ({ url, class: className }: HlsPlayerProps) => {
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
+        liveSyncDurationCount: 2, // Démarrer la lecture à 2 segments de la fin (edge)
+        liveMaxLatencyDurationCount: 3, // Si le délai dépasse 3 segments, sauter au direct
+        liveDurationIntersection: true,
+        maxLiveSyncPlaybackRate: 1.5, // Accélérer légèrement la vidéo pour rattraper le direct
       })
       hls.loadSource(url)
       hls.attachMedia(video)

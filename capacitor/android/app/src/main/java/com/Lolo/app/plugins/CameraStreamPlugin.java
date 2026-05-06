@@ -195,7 +195,8 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
             }
 
             if (!rtmpCamera1.isStreaming()) {
-                if (rtmpCamera1.prepareVideo(1280, 720, 30, 3000 * 1024, 0, 90) && rtmpCamera1.prepareAudio()) {
+                if (rtmpCamera1.prepareVideo(1280, 720, 30, 1500 * 1024, 1, 90)
+                        && rtmpCamera1.prepareAudio(128 * 1024, 44100, true, true, true)) {
                     rtmpCamera1.startStream(streamUrl);
                     call.resolve();
                 } else {
