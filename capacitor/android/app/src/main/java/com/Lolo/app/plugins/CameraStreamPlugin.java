@@ -1,6 +1,4 @@
-package com.Lolo.app.plugins;
 
-import android.Manifest;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.util.Log;

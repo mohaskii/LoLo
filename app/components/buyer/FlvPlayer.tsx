@@ -1,8 +1,5 @@
 import { useEffect, useRef } from 'preact/hooks'
-
-// mpegts.js est chargé via <script> tag dans index.html (CDN)
-// deno-lint-ignore no-explicit-any
-const mpegts = (globalThis as any).mpegts
+import mpegts from 'mpegts.js'
 
 interface FlvPlayerProps {
   url: string
@@ -11,12 +8,11 @@ interface FlvPlayerProps {
 
 export const FlvPlayer = ({ url, class: className }: FlvPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null)
-  // deno-lint-ignore no-explicit-any
-  const playerRef = useRef<any>(null)
+  const playerRef = useRef<mpegts.Player | null>(null)
 
   useEffect(() => {
     const video = videoRef.current
-    if (!video || !mpegts) return
+    if (!video) return
 
     if (!mpegts.isSupported()) {
       console.error('mpegts.js is not supported in this browser')
@@ -72,6 +68,7 @@ export const FlvPlayer = ({ url, class: className }: FlvPlayerProps) => {
       <video
         ref={videoRef}
         playsInline
+        disableRemotePlayback
         muted={false}
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
       />

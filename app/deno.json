@@ -1,15 +1,22 @@
 {
+  "exclude": [
+    "vendor/mpegts.js"
+  ],
   "tasks": {
     "dev": "deno run -A build-config.ts"
   },
-
   "fmt": {
     "useTabs": false,
     "lineWidth": 80,
     "indentWidth": 2,
     "semiColons": false,
     "singleQuote": true,
-    "exclude": ["metafile.json"]
+    "exclude": [
+      "metafile.json"
+    ]
+  },
+  "lint": {
+    "exclude": []
   },
   "lock": false,
   "nodeModulesDir": "auto",
@@ -30,6 +37,7 @@
     "daisyui": "npm:daisyui@^5.5.19",
     "gsap": "npm:gsap@^3.15.0",
     "hls.js": "npm:hls.js@^1.5.20",
+    "mpegts.js": "./vendor/mpegts.js/index.js",
     "lucide-preact": "npm:lucide-preact@^1.14.0",
     "preact": "npm:preact@^10.29.1",
     "tailwindcss": "npm:tailwindcss@^4.2.4",
