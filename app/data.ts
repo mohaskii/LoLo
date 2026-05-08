@@ -51,19 +51,19 @@ export const mockLivestreams: Livestream[] = [
     'tags': [],
     'thumbnail': {
       'id': 'SW1hZ2U6MTE4NzkxMDYyOA==',
-      'smallImage': 'https://picsum.photos/414/736',
+      'smallImage': 'Escarpins.png',
       'biggerImage': 'https://picsum.photos/640/1138',
-      'fullSizeImage': 'https://picsum.photos/1080/1920',
+      'fullSizeImage': 'girliveStreaming.png',
       '__typename': 'Image',
     },
     'trailerUrl': null,
     'title': 'Variety Color Breaks <3 CMM, EOE, KAMI, MB2 & Friends',
     'user': {
-      'username': 'mana_rock_games',
+      'username': 'Fatou Ndiaye',
       'id': '23672038',
       'profileImage': {
         'id': '588337627',
-        'url': 'https://picsum.photos/200/200?random=1',
+        'url': 'girliveStreaming.png',
       },
       'isPremierShop': false,
     },

@@ -17,10 +17,10 @@ export const LiveScreen = ({
   onClose: () => void
 }) => {
   const [messages, setMessages] = useState([
-    { id: 1, user: 'alex_99', text: 'This looks amazing! 🔥', isHost: false },
-    { id: 2, user: 'sarah.j', text: 'How much is it?', isHost: false },
-    { id: 3, user: stream.user.username, text: 'Welcome everyone! We have some great items today.', isHost: true },
-    { id: 4, user: 'mike_collector', text: 'Can you show the back of the card?', isHost: false },
+    { id: 1, user: 'alex_99', text: 'Loolu rafet na lool! 🔥', isHost: false },
+    { id: 2, user: 'sarah.j', text: 'Ñaata la?', isHost: false },
+    { id: 3, user: stream.user.username, text: 'Dalaal na leen yépp! Deniou wanter nak ', isHost: true },
+    { id: 4, user: 'mike_collector', text: 'Mën nga wone ginnaaw gi?', isHost: false },
   ])
 
   // Mock incoming messages
@@ -89,12 +89,18 @@ export const LiveScreen = ({
 
       {/* Store Highlight / Current Item Preview */}
       <div class='relative z-10 px-4 mb-4'>
-        <div class='bg-base-100/40 backdrop-blur-md p-2 rounded-xl flex items-center space-x-3 max-w-[200px] border border-white/10'>
-          <img src={stream.thumbnail.smallImage} class='w-12 h-12 rounded object-cover' />
-          <div class='flex flex-col flex-1'>
-            <span class='text-xs font-bold truncate'>Current Item</span>
-            <span class='text-[10px] text-gray-300'>$45.00</span>
+        <div class='bg-black/50 backdrop-blur-xl p-2.5 rounded-2xl flex items-center space-x-3 w-full max-w-[280px] border border-white/20 shadow-2xl'>
+          <div class='relative'>
+            <img src={stream.thumbnail.smallImage} class='w-14 h-14 rounded-xl object-cover border border-white/10' />
+
           </div>
+          <div class='flex flex-col flex-1'>
+            <span class='text-sm font-bold text-white leading-tight line-clamp-1'>Escarpins Mashallah</span>
+            <span class='text-sm font-black text-primary mt-0.5'>12.000 FCFA</span>
+          </div>
+          <button class='bg-primary hover:bg-primary-focus text-black text-xs font-black px-4 py-2.5 rounded-xl shadow-[0_0_15px_rgba(255,215,0,0.5)] transform transition-transform active:scale-95 uppercase tracking-wider'>
+            Acheter
+          </button>
         </div>
       </div>
 
@@ -124,12 +130,7 @@ export const LiveScreen = ({
         </button>
 
         <div class='flex items-center space-x-3'>
-          <button class='bg-black/40 backdrop-blur-md p-2.5 rounded-full border border-white/10'>
-            <ShoppingBag class='w-5 h-5 text-accent' />
-          </button>
-          <button class='bg-black/40 backdrop-blur-md p-2.5 rounded-full border border-white/10'>
-            <Gift class='w-5 h-5 text-secondary' />
-          </button>
+
           <button class='bg-black/40 backdrop-blur-md p-2.5 rounded-full border border-white/10'>
             <Share2 class='w-5 h-5' />
           </button>

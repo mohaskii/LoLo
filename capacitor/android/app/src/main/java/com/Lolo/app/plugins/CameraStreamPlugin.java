@@ -36,6 +36,7 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
     private FrameLayout cameraWrapper;
     private boolean isCameraPreviewShowing = false;
     private ViewGroup parentView;
+    private int currentCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
 
     @Override
     public void load() {
@@ -86,16 +87,19 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
                     int screenWidth = getActivity().getResources().getDisplayMetrics().widthPixels;
                     
                     int wrapperHeight;
-                    if ("fullscreen".equals(mode)) {
-                        wrapperHeight = screenHeight;
+                    boolean isFullscreen = "fullscreen".equals(mode);
+                    if (isFullscreen) {
+                        wrapperHeight = ViewGroup.LayoutParams.MATCH_PARENT;
                     } else {
-                        wrapperHeight = (int) (screenHeight * 0.40);
+                        wrapperHeight = (int) (screenHeight * 0.40) - getStatusBarHeight();
                     }
                     
                     // We want the video itself to be strictly 9:16
                     // 16 is height, 9 is width.
-                    int textureWidth = (int) (wrapperHeight * 9.0f / 16.0f);
-                    int textureHeight = wrapperHeight;
+                    // For fullscreen, use the actual screen height for texture calculations
+                    int effectiveHeight = isFullscreen ? screenHeight : wrapperHeight;
+                    int textureWidth = (int) (effectiveHeight * 9.0f / 16.0f);
+                    int textureHeight = effectiveHeight;
 
                     // If for some reason the width exceeds the screen width, constrain it
                     if (textureWidth > screenWidth) {
@@ -103,11 +107,16 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
                         textureHeight = (int) (screenWidth * 16.0f / 9.0f);
                     }
 
-                    // The wrapper fills the 40% height and full width (so it can center the video)
-                    ViewGroup.LayoutParams wrapperParams = new ViewGroup.LayoutParams(
+                    // The wrapper fills the height and full width (so it can center the video)
+                    // Use MarginLayoutParams since parent may be CoordinatorLayout, not FrameLayout
+                    ViewGroup.MarginLayoutParams wrapperParams = new ViewGroup.MarginLayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         wrapperHeight
                     );
+                    // In non-fullscreen mode, offset below the status bar
+                    if (!isFullscreen) {
+                        wrapperParams.topMargin = getStatusBarHeight();
+                    }
 
                     // The TextureView is exactly 9:16 and centered in the wrapper
                     FrameLayout.LayoutParams textureParams = new FrameLayout.LayoutParams(
@@ -126,7 +135,7 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
 
                 // Open the camera
                 if (camera == null) {
-                    camera = Camera.open();
+                    camera = Camera.open(currentCameraId);
                     camera.setDisplayOrientation(90); // Portrait mode
                     setOptimalCameraParameters(camera);
                 }
@@ -171,6 +180,44 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
         });
     }
 
+    @PluginMethod
+    public void flipCamera(PluginCall call) {
+        getActivity().runOnUiThread(() -> {
+            if (!isCameraPreviewShowing) {
+                call.reject("Camera is not running");
+                return;
+            }
+
+            // Toggle camera
+            currentCameraId = (currentCameraId == Camera.CameraInfo.CAMERA_FACING_BACK) 
+                ? Camera.CameraInfo.CAMERA_FACING_FRONT 
+                : Camera.CameraInfo.CAMERA_FACING_BACK;
+
+            // Stop current camera
+            if (camera != null) {
+                camera.stopPreview();
+                camera.release();
+                camera = null;
+            }
+
+            // Restart with new camera id
+            try {
+                camera = Camera.open(currentCameraId);
+                camera.setDisplayOrientation(90); // Portrait mode
+                setOptimalCameraParameters(camera);
+
+                if (cameraTextureView != null && cameraTextureView.getSurfaceTexture() != null) {
+                    camera.setPreviewTexture(cameraTextureView.getSurfaceTexture());
+                    camera.startPreview();
+                }
+                call.resolve();
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to flip camera: " + e.getMessage(), e);
+                call.reject("Failed to flip camera: " + e.getMessage());
+            }
+        });
+    }
+
     // ── Layout Update ──
     private void updateLayoutForMode(String mode) {
         if (cameraWrapper == null || cameraTextureView == null) return;
@@ -178,25 +225,28 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
         int screenHeight = getActivity().getResources().getDisplayMetrics().heightPixels;
         int screenWidth = getActivity().getResources().getDisplayMetrics().widthPixels;
         
+        boolean isFullscreen = "fullscreen".equals(mode);
         int wrapperHeight;
-        if ("fullscreen".equals(mode)) {
-            wrapperHeight = screenHeight;
+        if (isFullscreen) {
+            wrapperHeight = ViewGroup.LayoutParams.MATCH_PARENT;
         } else {
-            wrapperHeight = (int) (screenHeight * 0.40);
+            wrapperHeight = (int) (screenHeight * 0.40) - getStatusBarHeight();
         }
         
         // Strictly 9:16
-        int textureWidth = (int) (wrapperHeight * 9.0f / 16.0f);
-        int textureHeight = wrapperHeight;
+        int effectiveHeight = isFullscreen ? screenHeight : wrapperHeight;
+        int textureWidth = (int) (effectiveHeight * 9.0f / 16.0f);
+        int textureHeight = effectiveHeight;
 
         if (textureWidth > screenWidth) {
             textureWidth = screenWidth;
             textureHeight = (int) (screenWidth * 16.0f / 9.0f);
         }
 
-        ViewGroup.LayoutParams wrapperParams = cameraWrapper.getLayoutParams();
+        ViewGroup.MarginLayoutParams wrapperParams = (ViewGroup.MarginLayoutParams) cameraWrapper.getLayoutParams();
         if (wrapperParams != null) {
             wrapperParams.height = wrapperHeight;
+            wrapperParams.topMargin = isFullscreen ? 0 : getStatusBarHeight();
             cameraWrapper.setLayoutParams(wrapperParams);
         }
 
@@ -206,6 +256,18 @@ public class CameraStreamPlugin extends Plugin implements TextureView.SurfaceTex
             textureParams.height = textureHeight;
             cameraTextureView.setLayoutParams(textureParams);
         }
+    }
+
+    // ── Status Bar Height Helper ──
+    private int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getActivity().getResources().getIdentifier(
+            "status_bar_height", "dimen", "android"
+        );
+        if (resourceId > 0) {
+            result = getActivity().getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
     }
 
     // ── Camera Quality & Focus Configuration ──
