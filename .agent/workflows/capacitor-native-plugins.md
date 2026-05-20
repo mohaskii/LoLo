@@ -61,3 +61,5 @@ cd capacitor/android && ./gradlew assembleDebug
 - Layout uses `FrameLayout` with id `main_frame_layout` (not CoordinatorLayout)
 - Use `getActivity().getResources().getIdentifier()` for resource lookups (avoids R.id import issues)
 - The `activity_main.xml` uses `com.getcapacitor.CapacitorWebView` with `id="@+id/webview"`
+- Always include the proper `package` declaration at the top of the plugin file (e.g., `package com.Lolo.app.plugins;`).
+- Remember to import `android.Manifest` if you are requesting Android permissions in the `@Permission` annotation.

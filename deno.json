@@ -3,7 +3,7 @@
     "vendor/mpegts.js"
   ],
   "tasks": {
-    "dev": "deno run -A build-config.ts"
+    "dev": "deno run -A app/build-config.ts"
   },
   "fmt": {
     "useTabs": false,
